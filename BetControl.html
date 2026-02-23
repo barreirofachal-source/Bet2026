@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Inversión 2026 - Avanzado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #fafafa;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .month-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .month-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+        }
+
+        .day-header {
+            background: #f8fafc;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.75em;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .day-cell {
+            background: #fff;
+            min-height: 90px;
+            padding: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .day-cell:hover {
+            background: #f8fafc;
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .day-number {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+
+        .day-cell.other-month {
+            background: #f1f5f9;
+            color: #cbd5e1;
+        }
+
+        .day-cell.other-month .day-number {
+            color: #cbd5e1;
+        }
+
+        .day-cell.today {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+        }
+
+        .day-cell.has-data {
+            background: #f0fdf4;
+        }
+
+        .day-cell.negative {
+            background: #fef2f2;
+        }
+
+        .mini-summary {
+            font-size: 0.7em;
+            line-height: 1.4;
+            margin-top: 4px;
+        }
+
+        .mini-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+
+        .mini-transactions {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        /* Colores por concepto */
+        .color-inicial { color: #0369a1; }
+        .color-aportado { color: #dc2626; }
+        .color-cuota { color: #d97706; }
+        .color-obtenido { color: #059669; }
+        .color-final { color: #7c3aed; }
+        .color-neto { color: #0891b2; }
+
+        .bg-inicial { background: #0369a1; }
+        .bg-aportado { background: #dc2626; }
+        .bg-cuota { background: #d97706; }
+        .bg-obtenido { background: #059669; }
+        .bg-final { background: #7c3aed; }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .modal-title {
+            font-size: 1.4em;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: #6b7280;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+            color: #1e293b;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .formula-box {
+            background: #1e293b;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 2;
+        }
+
+        .formula-box .highlight {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+
+        .concept-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .concept-card {
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .concept-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .concept-card.inicial { border-color: #0369a1; background: #f0f9ff; }
+        .concept-card.aportado { border-color: #dc2626; background: #fef2f2; }
+        .concept-card.obtenido { border-color: #059669; background: #f0fdf4; }
+        .concept-card.final { border-color: #7c3aed; background: #f5f3ff; }
+
+        .concept-label {
+            font-weight: 700;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .concept-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .transactions-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .transaction-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+
+        .transactions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .transaction-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 12px;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .transaction-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .field-label {
+            font-size: 0.7em;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .field-value {
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        .transaction-result {
+            background: #f0fdf4;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .transaction-result.negative {
+            background: #fef2f2;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .total-summary {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-top: 40px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .total-summary h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 300;
+            font-size: 1.8em;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            background: rgba(255,255,255,0.1);
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .summary-value.positive { color: #4ade80; }
+        .summary-value.negative { color: #f87171; }
+
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+            font-style: italic;
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed #e2e8f0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-profit { background: #dcfce7; color: #166534; }
+        .status-loss { background: #fee2e2; color: #991b1b; }
+        .status-neutral { background: #f3f4f6; color: #374151; }
+
+        @media (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: 1fr;
+            }
+            .transaction-form {
+                grid-template-columns: 1fr;
+            }
+            .transaction-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            display: none;
+            animation: slideIn 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); }
+            to { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Control de Inversión 2026</h1>
+        <p class="subtitle">Gestión avanzada con múltiples aportaciones y cuotas individuales</p>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="exportData()">
+                💾 Guardar Datos
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                📁 Cargar Datos
+            </button>
+            <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="importData(this)">
+            <button class="btn btn-danger" onclick="clearAllData()">
+                🗑️ Borrar Todo
+            </button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot bg-inicial"></div>
+                <span class="color-inicial">Capital Inicial</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot bg-aportado"></div>
+                <span class="color-aportado">Capital Aportado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot bg-cuota"></div>
+                <span class="color-cuota">Cuota por Trans.</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot bg-obtenido"></div>
+                <span class="color-obtenido">Neto Obtenido</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot bg-final"></div>
+                <span class="color-final">Capital Final</span>
+            </div>
+        </div>
+
+        <div id="calendarContainer" class="calendar-grid"></div>
+
+        <div class="total-summary">
+            <h2>Resumen Anual 2026</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Aportado</div>
+                    <div class="summary-value" id="totalAportado">0.00 €</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Neto Obtenido</div>
+                    <div class="summary-value" id="totalObtenido">0.00 €</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Capital Final</div>
+                    <div class="summary-value" id="capitalFinalAnual">0.00 €</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Rentabilidad</div>
+                    <div class="summary-value" id="rentabilidad">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="dayModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalDate">Detalle del Día</div>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="formula-box">
+                    <div>Si Cuota > 0: Aportado × Cuota = <span class="highlight">Resultado</span></div>
+                    <div>Si Cuota = 0: Inicial - Aportado = <span class="highlight">Final</span> (Pérdida/Retiro)</div>
+                    <div>Si Cuota < 0: Aportado × Cuota = <span class="highlight">Pérdida</span></div>
+                    <div>Σ(Resultados individuales) = <span class="highlight">Neto Obtenido</span></div>
+                    <div>Inicial + Neto Obtenido = <span class="highlight">Capital Final</span></div>
+                </div>
+
+                <div class="concept-grid">
+                    <div class="concept-card inicial">
+                        <div class="concept-label color-inicial">
+                            <span>1</span> Capital Inicial
+                        </div>
+                        <div class="concept-value color-inicial" id="displayInicial">0.00 €</div>
+                    </div>
+
+                    <div class="transactions-section">
+                        <div class="section-title">
+                            <span>2</span> Transacciones del Día
+                        </div>
+                        
+                        <div class="transaction-form">
+                            <div class="input-group">
+                                <label>Capital Aportado</label>
+                                <input type="number" id="newAportacion" placeholder="0.00" step="0.01">
+                            </div>
+                            <div class="input-group">
+                                <label>Cuota</label>
+                                <input type="number" id="newCuota" placeholder="0.00" step="0.01">
+                            </div>
+                            <button class="btn btn-primary" onclick="addTransaction()" style="align-self: flex-end;">
+                                + Añadir
+                            </button>
+                        </div>
+
+                        <div class="transactions-list" id="transactionsList">
+                            <!-- Transacciones aquí -->
+                        </div>
+                    </div>
+
+                    <div class="concept-card obtenido">
+                        <div class="concept-label color-obtenido">
+                            <span>3</span> Neto Obtenido (Suma de resultados)
+                        </div>
+                        <div class="concept-value color-obtenido" id="displayObtenido">0.00 €</div>
+                        <div style="margin-top: 8px; font-size: 0.85em; color: #6b7280;" id="breakdownObtenido"></div>
+                    </div>
+
+                    <div class="concept-card final">
+                        <div class="concept-label color-final">
+                            <span>4</span> Capital Final
+                        </div>
+                        <div class="concept-value color-final" id="displayFinal">0.00 €</div>
+                        <div id="finalStatus" style="margin-top: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Estructura de datos: cada día tiene array de transacciones {aportado, cuota, resultado}
+        let data = {};
+        let currentDate = null;
+        
+        const STORAGE_KEY = 'inversionData2026';
+
+        // Inicializar datos para 2026
+        function initializeData() {
+            // Intentar cargar desde localStorage primero
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    data = JSON.parse(saved);
+                    showToast('Datos cargados automáticamente');
+                    recalculateAll();
+                    return;
+                } catch (e) {
+                    console.error('Error cargando datos:', e);
+                }
+            }
+
+            // Si no hay datos guardados, crear estructura vacía
+            const startDate = new Date(2026, 0, 1);
+            const endDate = new Date(2026, 11, 31);
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateKey = formatDateKey(d);
+                data[dateKey] = {
+                    inicial: 0,
+                    transacciones: [], // [{aportado, cuota, resultado}]
+                    netoObtenido: 0,
+                    final: 0
+                };
+            }
+            recalculateAll();
+        }
+
+        function formatDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function formatDisplayDate(dateKey) {
+            const [year, month, day] = dateKey.split('-');
+            const date = new Date(year, month - 1, day);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('es-ES', options);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-ES', {
+                style: 'currency',
+                currency: 'EUR'
+            }).format(amount);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Guardar en localStorage
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        // Exportar datos a archivo
+        function exportData() {
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inversiones_2026_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Datos exportados correctamente');
+        }
+
+        // Importar datos desde archivo
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    // Validar estructura básica
+                    if (typeof imported === 'object' && Object.keys(imported).length > 0) {
+                        data = imported;
+                        saveToStorage();
+                        recalculateAll();
+                        renderCalendar();
+                        showToast('Datos importados correctamente');
+                    } else {
+                        throw new Error('Formato inválido');
+                    }
+                } catch (err) {
+                    alert('Error al importar: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        // Borrar todos los datos
+        function clearAllData() {
+            if (!confirm('¿Estás seguro de borrar TODOS los datos? Esta acción no se puede deshacer.')) return;
+            
+            localStorage.removeItem(STORAGE_KEY);
+            data = {};
+            initializeData();
+            renderCalendar();
+            showToast('Datos borrados');
+        }
+
+        // Calcular resultado de una transacción según la cuota
+        function calcularResultado(aportado, cuota) {
+            if (cuota === 0) {
+                // Cuota 0 = retiro/pérdida directa: restamos del capital
+                return -aportado;
+            } else {
+                // Cuota positiva o negativa: multiplicamos
+                return aportado * cuota;
+            }
+        }
+
+        // Recalcular todo en cascada
+        function recalculateAll() {
+            const dates = Object.keys(data).sort();
+            let prevFinal = 0;
+            
+            for (const dateKey of dates) {
+                const day = data[dateKey];
+                
+                // Capital inicial = final del día anterior
+                day.inicial = prevFinal;
+                
+                // Calcular neto obtenido sumando resultados de todas las transacciones
+                day.netoObtenido = day.transacciones.reduce((sum, t) => {
+                    t.resultado = calcularResultado(t.aportado, t.cuota);
+                    return sum + t.resultado;
+                }, 0);
+                
+                // Capital final = inicial + neto obtenido
+                day.final = day.inicial + day.netoObtenido;
+                
+                prevFinal = day.final;
+            }
+            
+            updateSummary();
+            saveToStorage();
+        }
+
+        function updateSummary() {
+            let totalAportado = 0;
+            let totalObtenido = 0;
+            
+            Object.values(data).forEach(day => {
+                totalAportado += day.transacciones.reduce((sum, t) => sum + t.aportado, 0);
+                totalObtenido += day.netoObtenido;
+            });
+            
+            const finalCapital = Object.values(data).pop()?.final || 0;
+            const rentabilidad = totalAportado > 0 ? ((totalObtenido / totalAportado) * 100) : 0;
+            
+            const totalAportadoEl = document.getElementById('totalAportado');
+            const totalObtenidoEl = document.getElementById('totalObtenido');
+            const capitalFinalEl = document.getElementById('capitalFinalAnual');
+            const rentabilidadEl = document.getElementById('rentabilidad');
+            
+            totalAportadoEl.textContent = formatCurrency(totalAportado);
+            totalObtenidoEl.textContent = formatCurrency(totalObtenido);
+            capitalFinalEl.textContent = formatCurrency(finalCapital);
+            rentabilidadEl.textContent = rentabilidad.toFixed(2) + '%';
+            
+            // Colores según signo
+            totalObtenidoEl.className = 'summary-value ' + (totalObtenido >= 0 ? 'positive' : 'negative');
+            rentabilidadEl.className = 'summary-value ' + (rentabilidad >= 0 ? 'positive' : 'negative');
+        }
+
+        // Renderizar calendario
+        function renderCalendar() {
+            const container = document.getElementById('calendarContainer');
+            container.innerHTML = '';
+            const months = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            
+            months.forEach((monthName, monthIndex) => {
+                const monthCard = document.createElement('div');
+                monthCard.className = 'month-card';
+                
+                const header = document.createElement('div');
+                header.className = 'month-header';
+                header.textContent = `${monthName} 2026`;
+                monthCard.appendChild(header);
+                
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'days-grid';
+                
+                const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                dayNames.forEach(name => {
+                    const th = document.createElement('div');
+                    th.className = 'day-header';
+                    th.textContent = name;
+                    daysGrid.appendChild(th);
+                });
+                
+                const firstDay = new Date(2026, monthIndex, 1);
+                const lastDay = new Date(2026, monthIndex + 1, 0);
+                const startPadding = (firstDay.getDay() + 6) % 7;
+                
+                for (let i = 0; i < startPadding; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'day-cell other-month';
+                    daysGrid.appendChild(emptyCell);
+                }
+                
+                const today = new Date();
+                for (let day = 1; day <= lastDay.getDate(); day++) {
+                    const dateKey = `2026-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayData = data[dateKey] || { transacciones: [], final: 0, netoObtenido: 0 };
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
+                    
+                    const checkDate = new Date(2026, monthIndex, day);
+                    if (checkDate.toDateString() === today.toDateString()) {
+                        cell.classList.add('today');
+                    }
+                    
+                    if (dayData.transacciones.length > 0) {
+                        cell.classList.add('has-data');
+                        if (dayData.netoObtenido < 0) cell.classList.add('negative');
+                    }
+                    
+                    const totalAportado = dayData.transacciones.reduce((sum, t) => sum + t.aportado, 0);
+                    const numTrans = dayData.transacciones.length;
+                    
+                    let statusBadge = '';
+                    if (dayData.netoObtenido > 0) statusBadge = '<span class="status-badge status-profit">+</span>';
+                    else if (dayData.netoObtenido < 0) statusBadge = '<span class="status-badge status-loss">-</span>';
+                    
+                    cell.innerHTML = `
+                        <div class="day-number">${day} ${statusBadge}</div>
+                        ${numTrans > 0 ? `
+                            <div class="mini-summary">
+                                <div class="mini-row">
+                                    <span class="color-aportado">A:</span>
+                                    <span>${formatCurrency(totalAportado)}</span>
+                                </div>
+                                <div class="mini-row">
+                                    <span class="color-obtenido">N:</span>
+                                    <span style="color: ${dayData.netoObtenido >= 0 ? '#059669' : '#dc2626'}">
+                                        ${formatCurrency(dayData.netoObtenido)}
+                                    </span>
+                                </div>
+                                <div class="mini-row">
+                                    <span class="color-final">F:</span>
+                                    <span>${formatCurrency(dayData.final).replace('€', '')}</span>
+                                </div>
+                                ${numTrans > 1 ? `<div class="mini-transactions">${numTrans} trans.</div>` : ''}
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    cell.onclick = () => openModal(dateKey);
+                    daysGrid.appendChild(cell);
+                }
+                
+                monthCard.appendChild(daysGrid);
+                container.appendChild(monthCard);
+            });
+        }
+
+        // Modal functions
+        function openModal(dateKey) {
+            currentDate = dateKey;
+            document.getElementById('modalDate').textContent = formatDisplayDate(dateKey);
+            updateModalDisplay();
+            document.getElementById('dayModal').classList.add('active');
+        }
+
+        function updateModalDisplay() {
+            const dayData = data[currentDate];
+            
+            document.getElementById('displayInicial').textContent = formatCurrency(dayData.inicial);
+            document.getElementById('displayObtenido').textContent = formatCurrency(dayData.netoObtenido);
+            document.getElementById('displayFinal').textContent = formatCurrency(dayData.final);
+            
+            // Breakdown del neto obtenido
+            const breakdown = dayData.transacciones.map((t, i) => 
+                `T${i+1}: ${t.cuota === 0 ? '-' : t.cuota + 'x'} → ${formatCurrency(t.resultado)}`
+            ).join(' | ');
+            document.getElementById('breakdownObtenido').textContent = breakdown || 'Sin transacciones';
+            
+            // Status del final
+            const statusEl = document.getElementById('finalStatus');
+            const diff = dayData.final - dayData.inicial;
+            if (diff > 0) {
+                statusEl.innerHTML = `<span class="status-badge status-profit">↑ Ganancia: ${formatCurrency(diff)}</span>`;
+            } else if (diff < 0) {
+                statusEl.innerHTML = `<span class="status-badge status-loss">↓ Pérdida: ${formatCurrency(Math.abs(diff))}</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="status-badge status-neutral">→ Sin cambios</span>`;
+            }
+            
+            // Renderizar transacciones
+            const listContainer = document.getElementById('transactionsList');
+            if (dayData.transacciones.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">Sin transacciones este día. Añade una nueva arriba.</div>';
+            } else {
+                listContainer.innerHTML = dayData.transacciones.map((t, index) => {
+                    const isLoss = t.resultado < 0;
+                    const isWithdrawal = t.cuota === 0;
+                    return `
+                        <div class="transaction-item">
+                            <div class="transaction-field">
+                                <span class="field-label">Aportado</span>
+                                <span class="field-value color-aportado">${formatCurrency(t.aportado)}</span>
+                            </div>
+                            <div class="transaction-field">
+                                <span class="field-label">Cuota</span>
+                                <span class="field-value color-cuota">
+                                    ${isWithdrawal ? '0 (Retiro)' : t.cuota + 'x'}
+                                </span>
+                            </div>
+                            <div class="transaction-result ${isLoss ? 'negative' : ''}">
+                                <span class="field-label">Resultado</span>
+                                <span class="field-value ${isLoss ? 'color-aportado' : 'color-obtenido'}">
+                                    ${formatCurrency(t.resultado)}
+                                </span>
+                            </div>
+                            <button class="delete-btn" onclick="deleteTransaction(${index})">Eliminar</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('dayModal').classList.remove('active');
+            currentDate = null;
+            renderCalendar();
+        }
+
+        function addTransaction() {
+            const inputAport = document.getElementById('newAportacion');
+            const inputCuota = document.getElementById('newCuota');
+            
+            const aportado = parseFloat(inputAport.value);
+            const cuota = parseFloat(inputCuota.value);
+            
+            if (isNaN(aportado) || aportado <= 0) {
+                alert('Introduce una cantidad válida mayor que 0');
+                return;
+            }
+            
+            if (isNaN(cuota)) {
+                alert('Introduce una cuota válida (0 para retiros)');
+                return;
+            }
+            
+            data[currentDate].transacciones.push({
+                aportado: aportado,
+                cuota: cuota,
+                resultado: 0 // Se calculará en recalculateAll
+            });
+            
+            inputAport.value = '';
+            inputCuota.value = '';
+            
+            recalculateAll();
+            updateModalDisplay();
+            showToast('Transacción añadida');
+        }
+
+        function deleteTransaction(index) {
+            if (!confirm('¿Eliminar esta transacción?')) return;
+            data[currentDate].transacciones.splice(index, 1);
+            recalculateAll();
+            updateModalDisplay();
+            showToast('Transacción eliminada');
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('dayModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Tecla Escape para cerrar
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Inicialización
+        initializeData();
+        renderCalendar();
+    </script>
+</body>
+</html>
